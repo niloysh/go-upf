@@ -50,16 +50,22 @@ func NewDriver(wg *sync.WaitGroup, cfg *factory.Config) (Driver, error) {
 	if cfgGtpu.Forwarder == "gtp5g" {
 		var gtpuAddr string
 		var mtu uint32
+		var ifname string
 		for _, ifInfo := range cfgGtpu.IfList {
 			mtu = ifInfo.MTU
+			ifname = ifInfo.IfName
 			gtpuAddr = fmt.Sprintf("%s:%d", ifInfo.Addr, factory.UpfGtpDefaultPort)
 			logger.MainLog.Infof("GTP Address: %q", gtpuAddr)
 			break
 		}
+		if ifname == "" {
+			ifname = "upfgtp"
+		}
+		logger.MainLog.Infof("GTP ifname: %s", ifname)
 		if gtpuAddr == "" {
 			return nil, errors.Errorf("not found GTP address")
 		}
-		driver, err := OpenGtp5g(wg, gtpuAddr, mtu)
+		driver, err := OpenGtp5g(wg, gtpuAddr, mtu, ifname)
 		if err != nil {
 			return nil, errors.Wrap(err, "open Gtp5g")
 		}
